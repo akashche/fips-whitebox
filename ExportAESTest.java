@@ -31,7 +31,7 @@ import sun.security.pkcs11.wrapper.PKCS11;
 import static sun.security.pkcs11.P11Helper.getObjSession;
 import static sun.security.pkcs11.P11Helper.releaseSession;
 import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
-import static support.Assert.assertThat;
+import static support.Assert.assertEquals;
 import static support.JCAInit.initJCA;
 
 /*
@@ -40,21 +40,32 @@ import static support.JCAInit.initJCA;
  *          jdk.crypto.cryptoki/sun.security.pkcs11.wrapper:+open
  * @library support
  * @compile/module=jdk.crypto.cryptoki sun/security/pkcs11/P11Helper.java
- * @run main/othervm -Dcom.redhat.fips=true ImportAESTest
+ * @run main/othervm -Dcom.redhat.fips=true ExportAESTest
  */
-public class ImportAESTest {
+public class ExportAESTest {
     public static void main(String[] args) throws Exception {
 
         SunPKCS11 sunp11 = initJCA();
         PKCS11 p11 = P11Helper.getP11(sunp11);
         long session = getObjSession(sunp11);
 
+        byte[] keyBytes = new byte[32];
+        for (int i = 0; i < keyBytes.length; i++) {
+            keyBytes[i] = (byte) i;
+        }
+
         long keyId = p11.C_CreateObject(session, new CK_ATTRIBUTE[]{
                 new CK_ATTRIBUTE(CKA_CLASS, CKO_SECRET_KEY),
                 new CK_ATTRIBUTE(CKA_KEY_TYPE, CKK_AES),
-                new CK_ATTRIBUTE(CKA_VALUE, new byte[32])
+                new CK_ATTRIBUTE(CKA_VALUE, keyBytes)
         });
-        assertThat("Key import", keyId > 0);
+
+        CK_ATTRIBUTE[] exportAttrs = {
+                new CK_ATTRIBUTE(CKA_VALUE, new byte[32])
+        };
+        p11.C_GetAttributeValue(session, keyId, exportAttrs);
+        byte[] exported = (byte[]) exportAttrs[0].pValue;
+        assertEquals("Key export", keyBytes, exported);
 
         releaseSession(sunp11, session);
     }

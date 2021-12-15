@@ -23,27 +23,31 @@
  * questions.
  */
 
-package sun.security.pkcs11;
+package support;
 
-import sun.security.pkcs11.wrapper.PKCS11;
+import static support.Hex.bytesToHex;
 
-public class TestHelper {
+public class Assert {
 
-    public static PKCS11 getP11(SunPKCS11 sunp11) {
-        return sunp11.p11;
+    public static void assertThat(String message, boolean condition) {
+        if (!condition) {
+            throw new AssertionError("Check failed, message: [" + message + "]");
+        }
     }
 
-    public static long getOpSession(SunPKCS11 sunp11) throws Exception {
-       return sunp11.getToken().getOpSession().id();
+    public static void assertFalse(String message, boolean condition) {
+        assertThat(message, !condition);
     }
 
-    public static long getObjSession(SunPKCS11 sunp11) throws Exception {
-        return sunp11.getToken().getObjSession().id();
+    public static void assertEquals(String message, String expected, String actual) {
+        if (!expected.equals(actual)) {
+            throw new AssertionError("Check failed, expected: [" + expected + "]," +
+                    " actual: [" + actual + "], message: [" + message + "]");
+        }
     }
 
-    public static void releaseSession(SunPKCS11 sunp11, long session) {
-        Token token = sunp11.getToken();
-        Session sess = new Session(token, session);
-        token.releaseSession(sess);
+    public static void assertEquals(String message, byte[] expected, byte[] actual) {
+        assertEquals(message, bytesToHex(expected), bytesToHex(actual));
     }
+
 }
