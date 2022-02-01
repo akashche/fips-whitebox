@@ -27,45 +27,38 @@ import sun.security.pkcs11.P11Helper;
 import sun.security.pkcs11.SunPKCS11;
 import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
 import sun.security.pkcs11.wrapper.PKCS11;
+import sun.security.util.CurveDB;
+
+import java.math.BigInteger;
 
 import static sun.security.pkcs11.P11Helper.getObjSession;
 import static sun.security.pkcs11.P11Helper.releaseSession;
 import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
-import static support.Assert.assertEquals;
+import static support.Assert.assertThat;
 import static support.JCAInit.initJCA;
 
 /*
  * @test
  * @modules jdk.crypto.cryptoki/sun.security.pkcs11:+open
  *          jdk.crypto.cryptoki/sun.security.pkcs11.wrapper:+open
+ *          java.base/sun.security.util:+open
  * @library support
  * @compile/module=jdk.crypto.cryptoki sun/security/pkcs11/P11Helper.java
- * @run main/othervm -Dcom.redhat.fips=true ExportAESTest
+ * @run main/othervm -Dcom.redhat.fips=true ImportECTest
  */
-public class ExportAESTest {
+public class ImportECTest {
     public static void main(String[] args) throws Exception {
-
         SunPKCS11 sunp11 = initJCA();
         PKCS11 p11 = P11Helper.getP11(sunp11);
         long session = getObjSession(sunp11);
 
-        byte[] keyBytes = new byte[32];
-        for (int i = 0; i < keyBytes.length; i++) {
-            keyBytes[i] = (byte) i;
-        }
-
         long keyId = p11.C_CreateObject(session, new CK_ATTRIBUTE[]{
-                new CK_ATTRIBUTE(CKA_CLASS, CKO_SECRET_KEY),
-                new CK_ATTRIBUTE(CKA_KEY_TYPE, CKK_AES),
-                new CK_ATTRIBUTE(CKA_VALUE, keyBytes)
+                new CK_ATTRIBUTE(CKA_CLASS, CKO_PRIVATE_KEY),
+                new CK_ATTRIBUTE(CKA_KEY_TYPE, CKK_EC),
+                new CK_ATTRIBUTE(CKA_VALUE, new BigInteger("42276728708589091182785582030423859191599863173325111715671927433646150473573")),
+                new CK_ATTRIBUTE(CKA_EC_PARAMS, CurveDB.lookup("secp256r1").getEncoded())
         });
-
-        CK_ATTRIBUTE[] exportAttrs = {
-                new CK_ATTRIBUTE(CKA_VALUE, new byte[0])
-        };
-        p11.C_GetAttributeValue(session, keyId, exportAttrs);
-        byte[] exported = (byte[]) exportAttrs[0].pValue;
-        assertEquals("Key export", keyBytes, exported);
+        assertThat("Key import", keyId > 0);
 
         releaseSession(sunp11, session);
     }

@@ -27,6 +27,11 @@ import sun.security.pkcs11.P11Helper;
 import sun.security.pkcs11.SunPKCS11;
 import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
 import sun.security.pkcs11.wrapper.PKCS11;
+import sun.security.util.CurveDB;
+import sun.security.util.ECUtil;
+
+import java.math.BigInteger;
+import java.security.interfaces.ECPrivateKey;
 
 import static sun.security.pkcs11.P11Helper.getObjSession;
 import static sun.security.pkcs11.P11Helper.releaseSession;
@@ -38,34 +43,37 @@ import static support.JCAInit.initJCA;
  * @test
  * @modules jdk.crypto.cryptoki/sun.security.pkcs11:+open
  *          jdk.crypto.cryptoki/sun.security.pkcs11.wrapper:+open
+ *          java.base/sun.security.util:+open
  * @library support
  * @compile/module=jdk.crypto.cryptoki sun/security/pkcs11/P11Helper.java
- * @run main/othervm -Dcom.redhat.fips=true ExportAESTest
+ * @run main/othervm -Dcom.redhat.fips=true ExportECTest
  */
-public class ExportAESTest {
+public class ExportECTest {
     public static void main(String[] args) throws Exception {
-
         SunPKCS11 sunp11 = initJCA();
         PKCS11 p11 = P11Helper.getP11(sunp11);
         long session = getObjSession(sunp11);
 
-        byte[] keyBytes = new byte[32];
-        for (int i = 0; i < keyBytes.length; i++) {
-            keyBytes[i] = (byte) i;
-        }
+        ECPrivateKey key = ECUtil.generateECPrivateKey(
+                new BigInteger("42276728708589091182785582030423859191599863173325111715671927433646150473573"),
+                CurveDB.lookup("secp256r1")
+        );
 
         long keyId = p11.C_CreateObject(session, new CK_ATTRIBUTE[]{
-                new CK_ATTRIBUTE(CKA_CLASS, CKO_SECRET_KEY),
-                new CK_ATTRIBUTE(CKA_KEY_TYPE, CKK_AES),
-                new CK_ATTRIBUTE(CKA_VALUE, keyBytes)
+                new CK_ATTRIBUTE(CKA_CLASS, CKO_PRIVATE_KEY),
+                new CK_ATTRIBUTE(CKA_KEY_TYPE, CKK_EC),
+                new CK_ATTRIBUTE(CKA_VALUE, key.getS()),
+                new CK_ATTRIBUTE(CKA_EC_PARAMS, CurveDB.lookup(key.getParams()).getEncoded())
         });
 
         CK_ATTRIBUTE[] exportAttrs = {
-                new CK_ATTRIBUTE(CKA_VALUE, new byte[0])
+                new CK_ATTRIBUTE(CKA_KEY_TYPE, CKK_EC),
+                new CK_ATTRIBUTE(CKA_VALUE, new byte[0]),
+                new CK_ATTRIBUTE(CKA_EC_PARAMS, new byte[0])
         };
         p11.C_GetAttributeValue(session, keyId, exportAttrs);
-        byte[] exported = (byte[]) exportAttrs[0].pValue;
-        assertEquals("Key export", keyBytes, exported);
+        assertEquals("Exported value", key.getS(), exportAttrs[1].getBigInteger());
+        assertEquals("Exported params", CurveDB.lookup(key.getParams()).getEncoded(), exportAttrs[2].getByteArray());
 
         releaseSession(sunp11, session);
     }

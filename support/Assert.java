@@ -25,6 +25,8 @@
 
 package support;
 
+import java.math.BigInteger;
+
 import static support.Hex.bytesToHex;
 
 public class Assert {
@@ -41,13 +43,17 @@ public class Assert {
 
     public static void assertEquals(String message, String expected, String actual) {
         if (!expected.equals(actual)) {
-            throw new AssertionError("Check failed, expected: [" + expected + "]," +
-                    " actual: [" + actual + "], message: [" + message + "]");
+            throw new AssertionError("Check failed, message: [" + message + "], values:" +
+                    "\nexpected: [" + expected + "],\nactual: [" + actual + "]");
         }
     }
 
     public static void assertEquals(String message, byte[] expected, byte[] actual) {
         assertEquals(message, bytesToHex(expected), bytesToHex(actual));
+    }
+
+    public static void assertEquals(String message, BigInteger expected, BigInteger actual) {
+        assertEquals(message, String.valueOf(expected), String.valueOf(actual));
     }
 
 }
