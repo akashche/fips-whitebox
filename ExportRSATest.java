@@ -87,8 +87,10 @@ public class ExportRSATest {
                 new CK_ATTRIBUTE(CKA_PRIVATE_EXPONENT, new byte[0])
         };
         p11.C_GetAttributeValue(session, keyId, exportAttrs);
-        assertEquals("Exported modulus", key.getModulus(), exportAttrs[0].getBigInteger());
-        assertEquals("Exported private exponent", key.getPrivateExponent(), exportAttrs[1].getBigInteger());
+
+        int i = 0;
+        assertEquals("Exported modulus", key.getModulus(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported private exponent", key.getPrivateExponent(), exportAttrs[i++].getBigInteger());
 
         releaseSession(sunp11, session);
     }

@@ -71,8 +71,10 @@ public class ExportECTest {
                 new CK_ATTRIBUTE(CKA_EC_PARAMS, new byte[0])
         };
         p11.C_GetAttributeValue(session, keyId, exportAttrs);
-        assertEquals("Exported value", key.getS(), exportAttrs[0].getBigInteger());
-        assertEquals("Exported params", CurveDB.lookup(key.getParams()).getEncoded(), exportAttrs[1].getByteArray());
+
+        int i = 0;
+        assertEquals("Exported value", key.getS(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported params", CurveDB.lookup(key.getParams()).getEncoded(), exportAttrs[i++].getByteArray());
 
         releaseSession(sunp11, session);
     }
