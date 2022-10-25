@@ -84,13 +84,25 @@ public class ExportRSATest {
 
         CK_ATTRIBUTE[] exportAttrs = {
                 new CK_ATTRIBUTE(CKA_MODULUS, new byte[0]),
-                new CK_ATTRIBUTE(CKA_PRIVATE_EXPONENT, new byte[0])
+                new CK_ATTRIBUTE(CKA_PUBLIC_EXPONENT, new byte[0]),
+                new CK_ATTRIBUTE(CKA_PRIVATE_EXPONENT, new byte[0]),
+                new CK_ATTRIBUTE(CKA_PRIME_1, new byte[0]),
+                new CK_ATTRIBUTE(CKA_PRIME_2, new byte[0]),
+                new CK_ATTRIBUTE(CKA_EXPONENT_1, new byte[0]),
+                new CK_ATTRIBUTE(CKA_EXPONENT_2, new byte[0]),
+                new CK_ATTRIBUTE(CKA_COEFFICIENT, new byte[0]),
         };
         p11.C_GetAttributeValue(session, keyId, exportAttrs);
 
         int i = 0;
         assertEquals("Exported modulus", key.getModulus(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported public exponent", key.getPublicExponent(), exportAttrs[i++].getBigInteger());
         assertEquals("Exported private exponent", key.getPrivateExponent(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported prime P", key.getPrimeP(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported prime Q", key.getPrimeQ(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported prime exponent P", key.getPrimeExponentP(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported prime exponent Q", key.getPrimeExponentQ(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported coefficient", key.getCrtCoefficient(), exportAttrs[i++].getBigInteger());
 
         releaseSession(sunp11, session);
     }
