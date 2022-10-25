@@ -70,17 +70,18 @@ public class ExportDSATest {
         });
 
         CK_ATTRIBUTE[] exportAttrs = {
-                new CK_ATTRIBUTE(CKA_KEY_TYPE, CKK_DSA),
                 new CK_ATTRIBUTE(CKA_VALUE, new byte[0]),
                 new CK_ATTRIBUTE(CKA_PRIME, new byte[0]),
                 new CK_ATTRIBUTE(CKA_SUBPRIME, new byte[0]),
                 new CK_ATTRIBUTE(CKA_BASE, new byte[0])
         };
         p11.C_GetAttributeValue(session, keyId, exportAttrs);
-        assertEquals("Exported value", key.getX(), exportAttrs[1].getBigInteger());
-        assertEquals("Exported prime", key.getParams().getP(), exportAttrs[2].getBigInteger());
-        assertEquals("Exported subprime", key.getParams().getQ(), exportAttrs[3].getBigInteger());
-        assertEquals("Exported base", key.getParams().getG(), exportAttrs[4].getBigInteger());
+
+        int i = 0;
+        assertEquals("Exported value", key.getX(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported prime", key.getParams().getP(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported subprime", key.getParams().getQ(), exportAttrs[i++].getBigInteger());
+        assertEquals("Exported base", key.getParams().getG(), exportAttrs[i++].getBigInteger());
 
         releaseSession(sunp11, session);
     }
